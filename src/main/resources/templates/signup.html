@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - An Account</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/signup.css}">
+</head>
+<body>
+<div class="page-bg">
+    <div class="card">
+
+        <!-- Title -->
+        <h1 class="card-title">회원가입</h1>
+
+        <!-- Form fields (vertically centered in card) -->
+        <form id="signup-form" th:action="@{/signup}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div class="form-fields">
+
+                <!-- 이름 (실명) -->
+                <div class="field-group">
+                    <label class="field-label" for="fullName">이름 (실명)</label>
+                    <input class="field-input" type="text" id="fullName" name="fullName"
+                           autocomplete="name" th:value="${fullName}">
+                </div>
+
+                <!-- 휴대폰 번호 -->
+                <div class="field-group">
+                    <label class="field-label" for="phone">휴대폰 번호</label>
+                    <input class="field-input" type="tel" id="phone" name="phone"
+                           autocomplete="tel" th:value="${phone}">
+                </div>
+
+            </div>
+        </form>
+
+        <!-- Card footer -->
+        <div class="card-footer">
+            <!-- An Account logo (bottom-left) -->
+            <span class="ana-logo">
+                <svg width="131" height="23" viewBox="0 0 131 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <text x="0" y="18" font-family="'Pretendard Variable', Pretendard, sans-serif" font-size="16" font-weight="600" fill="#888899" letter-spacing="-0.3">An</text>
+                    <text x="26" y="18" font-family="'Pretendard Variable', Pretendard, sans-serif" font-size="16" font-weight="400" fill="#555566" letter-spacing="-0.3"> Account</text>
+                </svg>
+            </span>
+
+            <!-- Action buttons (bottom-right) -->
+            <div class="footer-actions">
+                <a th:href="@{/login}" class="btn btn-outline">취소</a>
+                <button type="submit" form="signup-form" class="btn btn-primary">계속 →</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,63 @@
+/* === Device code page — card size === */
+.card { width: 802px; height: 632px; }
+
+/* === Code container (527 × 309 px, centred, top: 162 px) === */
+.code-container {
+    position: absolute;
+    top: 162px;
+    left: calc(50% + 0.5px);
+    transform: translateX(-50%);
+    width: 527px;
+    height: 309px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.code-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* === Character box (120 × 120 px) === */
+.code-box {
+    width: 120px;
+    height: 120px;
+    background-color: var(--color-input);
+    border: none;
+    border-radius: var(--radius-input);
+    color: var(--color-text-muted);
+    font-family: inherit;
+    font-size: 48px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    text-align: center;
+    text-transform: uppercase;
+    outline: none;
+    caret-color: transparent;
+    flex-shrink: 0;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.code-box:focus {
+    background-color: var(--color-input-focus);
+    box-shadow: 0 0 0 2px rgba(92, 109, 155, 0.7);
+}
+
+.code-box:not(:placeholder-shown) { color: var(--color-text); }
+
+/* === Dash separator === */
+/* row1 = 4×120+3×15 = 525px; row2 = 40+15+525 = 580px → shift left (580-525)/2 = 27.5px */
+.code-dash {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 120px;
+    color: var(--color-text-muted);
+    font-size: 36px;
+    font-weight: 300;
+    flex-shrink: 0;
+    margin-left: -27px;
+}

@@ -1,0 +1,6 @@
+services:
+  mariadb:
+    image: 'mariadb:latest'
+    env_file: .env
+    ports:
+      - '3306'

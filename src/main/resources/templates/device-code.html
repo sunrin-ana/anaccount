@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기기 인증하기 - An Account</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/device-code.css}">
+</head>
+<body>
+<div class="page-bg">
+    <div class="card">
+
+        <!-- Title -->
+        <h1 class="card-title">기기 인증하기</h1>
+
+        <!-- Device code input (527 × 309, horizontally centred, top: 162px) -->
+        <form id="device-code-form" th:action="@{/device-code}" method="post" class="code-container">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+            <!-- Row 1: first 4 characters -->
+            <div class="code-row">
+                <input class="code-box" type="text" maxlength="1" inputmode="text"
+                       autocomplete="off" spellcheck="false" data-group="1" data-index="0">
+                <input class="code-box" type="text" maxlength="1" inputmode="text"
+                       autocomplete="off" spellcheck="false" data-group="1" data-index="1">
+                <input class="code-box" type="text" maxlength="1" inputmode="text"
+                       autocomplete="off" spellcheck="false" data-group="1" data-index="2">
+                <input class="code-box" type="text" maxlength="1" inputmode="text"
+                       autocomplete="off" spellcheck="false" data-group="1" data-index="3">
+            </div>
+
+            <!-- Row 2: dash + last 4 characters -->
+            <div class="code-row">
+                <span class="code-dash">–</span>
+                <input class="code-box" type="text" maxlength="1" inputmode="text"
+                       autocomplete="off" spellcheck="false" data-group="2" data-index="0">
+                <input class="code-box" type="text" maxlength="1" inputmode="text"
+                       autocomplete="off" spellcheck="false" data-group="2" data-index="1">
+                <input class="code-box" type="text" maxlength="1" inputmode="text"
+                       autocomplete="off" spellcheck="false" data-group="2" data-index="2">
+                <input class="code-box" type="text" maxlength="1" inputmode="text"
+                       autocomplete="off" spellcheck="false" data-group="2" data-index="3">
+            </div>
+
+            <!-- Hidden aggregated fields submitted to backend -->
+            <input type="hidden" name="userCode" id="userCode">
+        </form>
+
+        <!-- Card footer -->
+        <div class="card-footer">
+            <span class="ana-logo">
+                <svg width="131" height="23" viewBox="0 0 131 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <text x="0" y="18" font-family="'Pretendard Variable', Pretendard, sans-serif" font-size="16" font-weight="600" fill="#888899" letter-spacing="-0.3">An</text>
+                    <text x="26" y="18" font-family="'Pretendard Variable', Pretendard, sans-serif" font-size="16" font-weight="400" fill="#555566" letter-spacing="-0.3"> Account</text>
+                </svg>
+            </span>
+
+            <div class="footer-actions">
+                <a th:href="@{/login}" class="btn btn-outline">취소</a>
+                <button type="submit" form="device-code-form" class="btn btn-primary">계속 →</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    (function () {
+        const boxes = Array.from(document.querySelectorAll('.code-box'));
+
+        boxes.forEach((box, idx) => {
+            box.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && box.value === '' && idx > 0) {
+                    boxes[idx - 1].focus();
+                }
+            });
+
+            box.addEventListener('input', () => {
+                // Uppercase only
+                box.value = box.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (box.value.length === 1 && idx < boxes.length - 1) {
+                    boxes[idx + 1].focus();
+                }
+                syncHidden();
+            });
+
+            box.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const text = (e.clipboardData || window.clipboardData)
+                    .getData('text')
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9]/g, '')
+                    .slice(0, boxes.length - idx);
+                text.split('').forEach((ch, i) => {
+                    if (boxes[idx + i]) boxes[idx + i].value = ch;
+                });
+                const next = Math.min(idx + text.length, boxes.length - 1);
+                boxes[next].focus();
+                syncHidden();
+            });
+        });
+
+        function syncHidden() {
+            document.getElementById('userCode').value = boxes.map(b => b.value).join('');
+        }
+
+        // Focus first box on load
+        boxes[0] && boxes[0].focus();
+    })();
+</script>
+</body>
+</html>

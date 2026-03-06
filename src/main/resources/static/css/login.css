@@ -1,0 +1,44 @@
+/* === Login page — card size === */
+.card { width: 798px; height: 574px; }
+
+/* === Google Button (centred, 339 × 82 px) === */
+.google-btn-wrapper {
+    position: absolute;
+    top: 50%;
+    left: calc(50% + 0.5px);
+    transform: translate(-50%, -50%);
+}
+
+.google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    width: 339px;
+    height: 82px;
+    background-color: var(--color-surface);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-card);
+    color: #d8d8d8;
+    font-size: 20px;
+    font-weight: 400;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.google-btn:hover {
+    border-color: rgba(255, 255, 255, 0.55);
+    background-color: #111114;
+}
+
+.google-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+}
+
+.google-icon img { width: 30px; height: 30px; }

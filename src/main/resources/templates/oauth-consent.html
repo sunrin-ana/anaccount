@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="|${clientName}로 로그인 - An Account|">OAuth 로그인 - An Account</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/oauth-consent.css}">
+</head>
+<body>
+<div class="page-bg">
+    <div class="card">
+
+        <!-- Title -->
+        <h1 class="card-title" th:text="|${clientName}로 로그인|">An Apply로 로그인</h1>
+
+        <!-- Content block -->
+        <div class="consent-body">
+            <p class="consent-intro">
+                <span th:text="${clientName}">An Apply</span>는 다음과 같은 권한을 부여 받게 돼요.
+            </p>
+
+            <ul class="scope-list">
+                <li th:each="scope : ${scopes}" th:text="${scope}" class="scope-item">권한</li>
+            </ul>
+
+            <p class="consent-outro">다음 권한 외에는 제공되지 않아요.</p>
+        </div>
+
+        <!-- Card footer -->
+        <div class="card-footer">
+            <!-- An Account logo -->
+            <span class="ana-logo">
+                <svg width="131" height="23" viewBox="0 0 131 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <text x="0" y="18" font-family="'Pretendard Variable', Pretendard, sans-serif" font-size="16" font-weight="600" fill="#888899" letter-spacing="-0.3">An</text>
+                    <text x="26" y="18" font-family="'Pretendard Variable', Pretendard, sans-serif" font-size="16" font-weight="400" fill="#555566" letter-spacing="-0.3"> Account</text>
+                </svg>
+            </span>
+
+            <!-- Action buttons -->
+            <div class="footer-actions">
+                <form th:action="@{/oauth2/consent}" method="post" style="display:contents;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="client_id"      th:value="${clientId}">
+                    <input type="hidden" name="state"          th:value="${state}">
+                    <input type="hidden" name="decision"       id="decision" value="deny">
+                    <button type="submit" class="btn btn-outline"
+                            onclick="document.getElementById('decision').value='deny'">취소</button>
+                    <button type="submit" class="btn btn-primary"
+                            onclick="document.getElementById('decision').value='approve'">계속 →</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

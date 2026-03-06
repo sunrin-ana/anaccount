@@ -1,0 +1,32 @@
+/* === OAuth consent page — card size === */
+.card { width: 1004px; height: 688px; }
+
+/* === Consent body (28 px / line-height 1.7) === */
+.consent-body {
+    position: absolute;
+    top: calc(50% - 216px);
+    left: 46px;
+    right: 46px;
+    color: var(--color-text);
+    font-size: 28px;
+    line-height: 1.7;
+    letter-spacing: -0.56px;
+}
+
+.consent-intro { font-weight: 400; white-space: pre; }
+
+.scope-list {
+    list-style: disc;
+    margin-left: 1.5em;
+}
+
+.scope-item {
+    font-weight: 600;
+    line-height: 1.7;
+}
+
+.consent-outro {
+    font-weight: 400;
+    margin-top: calc(28px * 1.7);
+    white-space: pre;
+}

@@ -1,0 +1,94 @@
+/* === Design Tokens === */
+:root {
+    --color-bg:          #030307;
+    --color-surface:     #0c0c0d;
+    --color-input:       #18181a;
+    --color-input-focus: #1e1e21;
+    --color-primary:     #334882;
+    --color-primary-mid: #5c6d9b;
+    --color-text:        #fff;
+    --color-text-muted:  #f0f0f2;
+    --font-base: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --radius-card:  16px;
+    --radius-input: 8px;
+}
+
+/* === Reset === */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font-base); -webkit-font-smoothing: antialiased; }
+a    { text-decoration: none; }
+
+/* === Page background === */
+.page-bg {
+    background-color: var(--color-bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* === Card base (width/height overridden per page) === */
+.card {
+    position: relative;
+    background-color: var(--color-surface);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+}
+
+/* === Card title === */
+.card-title {
+    position: absolute;
+    top: 41px;
+    left: 46px;
+    font-size: 60px;
+    font-weight: 600;
+    color: var(--color-text);
+    letter-spacing: -1.2px;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+/* === Card footer === */
+.card-footer {
+    position: absolute;
+    bottom: 34px;
+    left: 46px;
+    right: 51px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ana-logo {
+    display: flex;
+    align-items: center;
+    width: 131px;
+    height: 23px;
+}
+
+.footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* === Buttons === */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 50px;
+    border-radius: var(--radius-card);
+    font-family: inherit;
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    cursor: pointer;
+    line-height: normal;
+    background: none;
+    transition: opacity 0.2s ease;
+}
+.btn:hover     { opacity: 0.85; }
+.btn-primary   { background-color: var(--color-primary); border: none; }
+.btn-outline   { border: 1px solid var(--color-primary); }
