@@ -96,13 +96,13 @@ public class MasterCodeService {
                     "ams",
                     OAuthClient.builder()
                             .name("AMS")
-                            .authenticationMethods("client_secret_post")
-                            .authorizationGrantTypes("authorization_code,refresh_token")
-                            .redirectUris("https://mgnt.ana.st/oauth/anaccount/callback")
-                            .postLogoutRedirectUris("")
+                            .authenticationMethods(Set.of("client_secret_post"))
+                            .authorizationGrantTypes(Set.of("authorization_code", "refresh_token"))
+                            .redirectUris(Set.of("https://mgnt.ana.st/oauth/anaccount/callback"))
+                            .postLogoutRedirectUris(Set.of())
                             .clientSettings(mapper.writeValueAsString(ClientSettings.builder().requireProofKey(true).requireAuthorizationConsent(false).build()))
                             .tokenSettings(mapper.writeValueAsString(TokenSettings.builder().accessTokenTimeToLive(Duration.ofHours(2)).refreshTokenTimeToLive(Duration.ofDays(7)).build()))
-                            .scopes("email,profile")
+                            .scopes(Set.of("email", "profile"))
                             .build()
             );
 

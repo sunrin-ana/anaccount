@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import st.ana.accounts.oauth.server.model.OAuthClient;
 import st.ana.accounts.oauth.server.repository.OAuthClientRepository;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,19 +32,19 @@ public class RegisteredClientService implements RegisteredClientRepository {
                     .id(registeredClient.getId())
                     .name(registeredClient.getClientName())
                     .secret(registeredClient.getClientSecret())
-                    .scopes(String.join(",", registeredClient.getScopes()))
+                    .scopes(registeredClient.getScopes())
                     .tokenSettings(objMapper.writeValueAsString(registeredClient.getTokenSettings().getSettings()))
                     .clientSettings(objMapper.writeValueAsString(registeredClient.getClientSettings().getSettings()))
                     .authenticationMethods(registeredClient.getClientAuthenticationMethods()
                             .stream()
                             .map(ClientAuthenticationMethod::getValue)
-                            .collect(Collectors.joining(","))
-                    ).redirectUris(String.join(",", registeredClient.getRedirectUris()))
-                    .postLogoutRedirectUris(String.join(",", registeredClient.getPostLogoutRedirectUris()))
+                            .collect(Collectors.toSet())
+                    ).redirectUris(registeredClient.getRedirectUris())
+                    .postLogoutRedirectUris(registeredClient.getPostLogoutRedirectUris())
                     .authorizationGrantTypes(registeredClient.getAuthorizationGrantTypes()
                             .stream()
                             .map(AuthorizationGrantType::getValue)
-                            .collect(Collectors.joining(","))
+                            .collect(Collectors.toSet())
                     ).build();
 
             clientRepository.save(client);
@@ -67,19 +66,21 @@ public class RegisteredClientService implements RegisteredClientRepository {
         try {
             return RegisteredClient.withId(clientId)
                     .clientId(clientId)
+                    .clientName(client.get().getName())
                     .clientSecret(client.get().getSecret())
-                    .scopes(s -> s.addAll(Arrays.asList(client.get().getScopes().split(","))))
+                    .scopes(s -> s.addAll(client.get().getScopes()))
                     .tokenSettings(TokenSettings.withSettings(objMapper.readValue(client.get().getTokenSettings(), Map.class)).build())
                     .clientSettings(ClientSettings.withSettings(objMapper.readValue(client.get().getClientSettings(), Map.class)).build())
-                    .clientAuthenticationMethods(s -> s.addAll(Arrays.stream(client.get().getAuthenticationMethods().split(","))
-                            .map(ClientAuthenticationMethod::valueOf)
+                    .clientAuthenticationMethods(s -> s.addAll(client.get().getAuthenticationMethods()
+                            .stream()
+                            .map(ClientAuthenticationMethod::new)
                             .collect(Collectors.toSet())))
-                    .redirectUris(s -> s.addAll(Arrays.asList(client.get().getRedirectUris().split(","))))
-                    .postLogoutRedirectUris(s -> s.addAll(Arrays.asList(client.get().getPostLogoutRedirectUris().split(","))))
-                    .authorizationGrantTypes(s -> s.addAll(Arrays.stream(client.get().getAuthorizationGrantTypes().split(","))
+                    .redirectUris(s -> s.addAll(client.get().getRedirectUris()))
+                    .postLogoutRedirectUris(s -> s.addAll(client.get().getPostLogoutRedirectUris()))
+                    .authorizationGrantTypes(s -> s.addAll(client.get().getAuthorizationGrantTypes()
+                            .stream()
                             .map(AuthorizationGrantType::new)
                             .collect(Collectors.toSet())))
-                    .authorizationGrantType(new AuthorizationGrantType(client.get().getAuthorizationGrantTypes()))
                     .build();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

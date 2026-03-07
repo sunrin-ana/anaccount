@@ -1,13 +1,21 @@
 package st.ana.accounts.oauth.server.model;
 
-import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
+
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(
@@ -29,20 +37,35 @@ public class OAuthClient {
     @Column(name = "name", nullable = false, length = 200)
     private String name;
 
-    @Column(name = "authentication_methods", nullable = false, length = 1000)
-    private String authenticationMethods;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "oauth_client_auth_methods", joinColumns = @JoinColumn(name = "oauth_id"))
+    @Column(name = "method", nullable = false, length = 200)
+    @Builder.Default
+    private Set<String> authenticationMethods = new HashSet<>();
 
-    @Column(name = "authorization_grant_types", nullable = false, length = 1000)
-    private String authorizationGrantTypes;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "oauth_client_grant_types", joinColumns = @JoinColumn(name = "oauth_id"))
+    @Column(name = "grant_type", nullable = false, length = 200)
+    @Builder.Default
+    private Set<String> authorizationGrantTypes = new HashSet<>();
 
-    @Column(name = "redirect_uris", length = 1000)
-    private String redirectUris;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "oauth_client_redirect_uris", joinColumns = @JoinColumn(name = "oauth_id"))
+    @Column(name = "uri", length = 1000)
+    @Builder.Default
+    private Set<String> redirectUris = new HashSet<>();
 
-    @Column(name = "post_logout_redirect_uris", length = 1000)
-    private String postLogoutRedirectUris;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "oauth_client_post_logout_uris", joinColumns = @JoinColumn(name = "oauth_id"))
+    @Column(name = "uri", length = 1000)
+    @Builder.Default
+    private Set<String> postLogoutRedirectUris = new HashSet<>();
 
-    @Column(name = "scopes", nullable = false, length = 1000)
-    private String scopes;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "oauth_client_scopes", joinColumns = @JoinColumn(name = "oauth_id"))
+    @Column(name = "scope", nullable = false, length = 200)
+    @Builder.Default
+    private Set<String> scopes = new HashSet<>();
 
     @Column(name = "client_settings", nullable = false, length = 2000)
     private String clientSettings;
@@ -53,6 +76,7 @@ public class OAuthClient {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "oauth_allowed_roles", joinColumns = @JoinColumn(name = "oauth_id"))
     @Column(name = "role")
+    @Builder.Default
     private Set<String> allowedRoles = new HashSet<>();
 
     @Column(name = "ams_refer")
