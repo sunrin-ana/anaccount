@@ -1,5 +1,6 @@
 package st.ana.accounts.oauth.client;
 
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
@@ -11,6 +12,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Getter
 public class OIDCUserPrincipal implements OidcUser {
     private final User user;
 
@@ -23,8 +25,7 @@ public class OIDCUserPrincipal implements OidcUser {
         return Map.of(
                 "sub", user.getId(),
                 "email", user.getEmail(),
-                "generation", user.getGeneration(),
-                "google", user.getGoogleId()
+                "generation", user.getGeneration()
         );
     }
 
@@ -40,12 +41,15 @@ public class OIDCUserPrincipal implements OidcUser {
 
     @Override
     public Map<String, Object> getClaims() {
-        return Map.of();
+        return Map.of(
+                "name", user.getName(),
+                "google", user.getGoogleId()
+        );
     }
 
     @Override
     public OidcUserInfo getUserInfo() {
-        return null;
+        return new OidcUserInfo(getAttributes());
     }
 
     @Override

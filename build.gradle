@@ -32,10 +32,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-security-saml2'
     implementation 'org.springframework.security:spring-security-webauthn'
     implementation 'org.projectlombok:lombok:1.18.42'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.21.1'
 
     // TOTP
     implementation 'dev.samstevens.totp:totp-spring-boot-starter:1.7.1'

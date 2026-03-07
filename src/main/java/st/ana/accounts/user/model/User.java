@@ -26,6 +26,7 @@ public class User {
     private String googleId; // 구글 연동
     @Column(unique = true)
     private String email; // 이메일 (개인 이메일 등록 가능; NULLABLE)
+    @Column(nullable = false)
     private int generation; // 기수 (-1이라면 MEMBER가 아님)
     @Column(nullable = false)
     private String name; // 실명
