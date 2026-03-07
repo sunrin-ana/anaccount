@@ -2,33 +2,41 @@ package st.ana.accounts.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import st.ana.accounts.masterkey.security.MasterCodeAuthenticationFilter;
+import st.ana.accounts.oauth.client.OIDCUserService;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final MasterCodeAuthenticationFilter masterCodeAuthenticationFilter;
+    private final OIDCUserService oidcUserService;
 
-    public SecurityConfig(MasterCodeAuthenticationFilter masterCodeAuthenticationFilter) {
-        this.masterCodeAuthenticationFilter = masterCodeAuthenticationFilter;
+    public SecurityConfig(OIDCUserService oidcUserService) {
+        this.oidcUserService = oidcUserService;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Order(2)
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/signup", "/oauth2/consent", "/device-code", "/css/**", "/images/**", "/error").permitAll()
+                .requestMatchers("/signup").hasRole("UNKNOWN")
                 .anyRequest().authenticated()
-            )
-            .oauth2Login(oauth2 -> oauth2
+            ).oauth2Login(oauth2 -> oauth2
                 .loginPage("/login")
-            )
-            .addFilterBefore(masterCodeAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .defaultSuccessUrl("/continue")
+                .userInfoEndpoint(userInfo -> userInfo.oidcUserService(oidcUserService))
+            ).logout(
+                    logout -> logout
+                            .logoutUrl("/logout")
+                            .logoutSuccessUrl("/login")
+                            .invalidateHttpSession(true)
+                            .deleteCookies("JSESSIONID")
+            );
 
         return http.build();
     }

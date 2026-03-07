@@ -1,0 +1,34 @@
+.card {
+    min-width: 25rem;
+    min-height: 15rem;
+}
+
+/* === Error label ("Error:") === */
+.error-label {
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--color-text);
+    letter-spacing: -0.56px;
+    white-space: nowrap;
+}
+
+/* === Error details block === */
+.error-details {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-text);
+    letter-spacing: -0.56px;
+    white-space: pre-line;
+    max-height: 10rem;
+    min-height: 3rem;
+    overflow: hidden;
+}
+
+/* === Contact message === */
+.error-contact {
+    font-size: 1rem;
+    color: var(--color-text);
+    letter-spacing: -0.56px;
+    line-height: 1.7;
+    white-space: nowrap;
+}

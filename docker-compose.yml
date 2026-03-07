@@ -1,6 +1,36 @@
 services:
-  mariadb:
-    image: 'mariadb:latest'
+  postgres:
+    image: 'postgres:16-alpine'
     env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - anaccount-network
     ports:
-      - '3306'
+      - "5432"
+    labels:
+      - "org.springframework.boot.service-connection=postgres"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  anaccount-network:
+    driver: bridge

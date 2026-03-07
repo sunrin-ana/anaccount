@@ -3,39 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로그인 - An Account</title>
+    <title>오류 - An Account</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
     <link rel="stylesheet" th:href="@{/css/base.css}">
-    <link rel="stylesheet" th:href="@{/css/login.css}">
+    <link rel="stylesheet" th:href="@{/css/error.css}">
 </head>
 <body>
 <div class="page-bg">
     <div class="card">
 
-        <h1 class="card-title">로그인</h1>
+        <!-- Title -->
+        <h1 class="card-title" th:text="${errorTitle ?: 'An Apply에 로그인 할 수 없음'}">An Apply에 로그인 할 수 없음</h1>
 
-        <div class="google-btn-wrapper">
-            <a th:href="@{/oauth2/authorization/google}" class="google-btn">
-                <span class="google-icon">
-                    <img th:src="@{/images/google-icon.svg}" alt="Google" width="30" height="30">
-                </span>
-                <span class="google-btn-text">Continue with Google</span>
-            </a>
-        </div>
+        <p class="error-label">Error:</p>
 
-        <!-- Card footer -->
+        <div class="error-details" th:text="${errorDetails  ?: 'ERROR DETAILS'}">ERROR DETAILS</div>
+
+        <p class="error-contact">만약 사용자라면 AnA ISDT에 문의해주세요.</p>
+
         <div class="card-footer">
-            <!-- An Account logo (bottom-left) -->
             <span class="ana-logo">
                 <svg width="131" height="23" viewBox="0 0 131 23" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <text x="0" y="18" font-family="'Pretendard Variable', Pretendard, sans-serif" font-size="16" font-weight="600" fill="#888899" letter-spacing="-0.3">An</text>
                     <text x="26" y="18" font-family="'Pretendard Variable', Pretendard, sans-serif" font-size="16" font-weight="400" fill="#555566" letter-spacing="-0.3"> Account</text>
                 </svg>
             </span>
-
-            <!-- Action buttons (bottom-right) -->
-            <div class="footer-actions"></div>
+            <div class="footer-actions">
+                <a th:href="${returnUrl ?: '/'}" class="btn btn-primary">확인</a>
+            </div>
         </div>
 
     </div>

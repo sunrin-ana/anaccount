@@ -1,29 +1,20 @@
-/* === Signup page — card size === */
-.card { width: 740px; height: 634px; }
-
-/* === Form Fields (vertically centred, 501 px wide) === */
 .form-fields {
-    position: absolute;
-    top: 191px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 501px;
     display: flex;
     flex-direction: column;
     gap: 32px;
+    align-items: center;
+    margin: 1rem 2rem;
 }
 
 .field-group {
     display: flex;
+    gap: .4rem;
     flex-direction: column;
-    height: 110px;
 }
 
 .field-label {
     display: block;
-    height: 34px;
-    font-size: 24px;
-    font-weight: 500;
+    font-size: 1rem;
     color: var(--color-text);
     letter-spacing: -0.48px;
     line-height: normal;
@@ -34,15 +25,14 @@
 
 .field-input {
     width: 100%;
-    height: 76px;
     background-color: var(--color-input);
     border: none;
     border-radius: var(--radius-input);
     color: var(--color-text-muted);
     font-family: inherit;
-    font-size: 20px;
+    font-size: 1rem;
     font-weight: 400;
-    padding: 0 20px;
+    padding: 1rem 0.8rem;
     outline: none;
     flex-shrink: 0;
     transition: background-color 0.2s ease;

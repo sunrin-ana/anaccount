@@ -1,12 +1,9 @@
 /* === Login page — card size === */
-.card { width: 798px; height: 574px; }
+
 
 /* === Google Button (centred, 339 × 82 px) === */
 .google-btn-wrapper {
-    position: absolute;
-    top: 50%;
-    left: calc(50% + 0.5px);
-    transform: translate(-50%, -50%);
+    padding: 4rem 6rem;
 }
 
 .google-btn {
@@ -14,13 +11,12 @@
     align-items: center;
     justify-content: center;
     gap: 14px;
-    width: 339px;
-    height: 82px;
+    padding: 1.2rem 1.6rem;
     background-color: var(--color-surface);
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: var(--radius-card);
     color: #d8d8d8;
-    font-size: 20px;
+    font-size: 1rem;
     font-weight: 400;
     white-space: nowrap;
     cursor: pointer;

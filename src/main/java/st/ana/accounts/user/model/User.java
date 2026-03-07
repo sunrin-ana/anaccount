@@ -3,17 +3,25 @@ package st.ana.accounts.user.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.*;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.Set;
 
 @Entity
+@Table(name = "users")
+@Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
     @Id
     private Long id; // 아이디
     @Column(unique = true)
-    private String handle; // 헨들
+    private String handle; // 헨들 (NULL이라면 MEMBER가 아님)
     @Column(unique = true)
     private String googleId; // 구글 연동
     @Column(unique = true)
@@ -22,7 +30,7 @@ public class User {
     @Column(nullable = false)
     private String name; // 실명
     @Column(name = "phone_number")
-    private String phoneNumber;
+    private String phoneNumber; // 전번 (NULL이라면 MEMBER가 아님)
     @Nullable
     private String password; // password가 null일시에는 구글으로만 로그인 가능.
     private Set<String> roles;
