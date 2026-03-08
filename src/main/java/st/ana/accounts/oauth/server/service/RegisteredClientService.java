@@ -1,8 +1,12 @@
 package st.ana.accounts.oauth.server.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -11,19 +15,20 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
 import st.ana.accounts.oauth.server.model.OAuthClient;
 import st.ana.accounts.oauth.server.repository.OAuthClientRepository;
-
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class RegisteredClientService implements RegisteredClientRepository {
 
     private final OAuthClientRepository clientRepository;
-    private final ObjectMapper objMapper = new ObjectMapper();
+    private final ObjectMapper objMapper;
 
     @Override
     public void save(RegisteredClient registeredClient) {
@@ -63,27 +68,62 @@ public class RegisteredClientService implements RegisteredClientRepository {
         Optional<OAuthClient> client = clientRepository.findById(clientId);
         if (client.isEmpty()) return null;
 
-        try {
-            return RegisteredClient.withId(clientId)
-                    .clientId(clientId)
-                    .clientName(client.get().getName())
-                    .clientSecret(client.get().getSecret())
-                    .scopes(s -> s.addAll(client.get().getScopes()))
-                    .tokenSettings(TokenSettings.withSettings(objMapper.readValue(client.get().getTokenSettings(), Map.class)).build())
-                    .clientSettings(ClientSettings.withSettings(objMapper.readValue(client.get().getClientSettings(), Map.class)).build())
-                    .clientAuthenticationMethods(s -> s.addAll(client.get().getAuthenticationMethods()
-                            .stream()
-                            .map(ClientAuthenticationMethod::new)
-                            .collect(Collectors.toSet())))
-                    .redirectUris(s -> s.addAll(client.get().getRedirectUris()))
-                    .postLogoutRedirectUris(s -> s.addAll(client.get().getPostLogoutRedirectUris()))
-                    .authorizationGrantTypes(s -> s.addAll(client.get().getAuthorizationGrantTypes()
-                            .stream()
-                            .map(AuthorizationGrantType::new)
-                            .collect(Collectors.toSet())))
-                    .build();
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+        return RegisteredClient.withId(clientId)
+                .clientId(clientId)
+                .clientName(client.get().getName())
+                .clientSecret(client.get().getSecret())
+                .scopes(s -> s.addAll(client.get().getScopes()))
+                .tokenSettings(TokenSettings.builder()
+                        .settings(s -> {
+                            try {
+                                s.putAll(fixDurations(objMapper.readValue(client.get().getTokenSettings(), Map.class)));
+                            } catch (JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                        .build())
+                .clientSettings(ClientSettings.builder()
+                        .settings(s -> {
+                            try {
+                                s.putAll(objMapper.readValue(client.get().getClientSettings(), Map.class));
+                            } catch (JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                        .build())
+                .clientAuthenticationMethods(s -> s.addAll(client.get().getAuthenticationMethods()
+                        .stream()
+                        .map(ClientAuthenticationMethod::new)
+                        .collect(Collectors.toSet())))
+                .redirectUris(s -> s.addAll(client.get().getRedirectUris()))
+                .postLogoutRedirectUris(s -> s.addAll(client.get().getPostLogoutRedirectUris()))
+                .authorizationGrantTypes(s -> s.addAll(client.get().getAuthorizationGrantTypes()
+                        .stream()
+                        .map(AuthorizationGrantType::new)
+                        .collect(Collectors.toSet())))
+                .build();
+    }
+
+    private static final Set<String> DURATION_KEYS = Set.of(
+            "settings.token.authorization-code-time-to-live",
+            "settings.token.access-token-time-to-live",
+            "settings.token.refresh-token-time-to-live",
+            "settings.token.device-code-time-to-live"
+    );
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> fixDurations(Map<String, Object> settings) {
+        Map<String, Object> result = new HashMap<>(settings);
+        for (String key : DURATION_KEYS) {
+            Object value = result.get(key);
+            if (value instanceof String s) {
+                result.put(key, Duration.parse(s));
+            } else if (value instanceof Number n) {
+                long seconds = n.longValue();
+                long nanos = (long) ((n.doubleValue() - seconds) * 1_000_000_000L);
+                result.put(key, Duration.ofSeconds(seconds, nanos));
+            }
         }
+        return result;
     }
 }

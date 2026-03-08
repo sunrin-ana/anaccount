@@ -1,26 +1,5 @@
 package st.ana.accounts.masterkey.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.hash.Hashing;
-import dev.samstevens.totp.code.CodeGenerator;
-import dev.samstevens.totp.code.CodeVerifier;
-import dev.samstevens.totp.exceptions.CodeGenerationException;
-import dev.samstevens.totp.time.TimeProvider;
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
-import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import st.ana.accounts.oauth.server.model.OAuthClient;
-import st.ana.accounts.oauth.server.service.OAuthClientService;
-
-import javax.crypto.*;
-import javax.crypto.spec.ChaCha20ParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +13,34 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Objects;
 import java.util.Set;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.ChaCha20ParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.hash.Hashing;
+
+import dev.samstevens.totp.code.CodeGenerator;
+import dev.samstevens.totp.code.CodeVerifier;
+import dev.samstevens.totp.exceptions.CodeGenerationException;
+import dev.samstevens.totp.time.TimeProvider;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import st.ana.accounts.oauth.server.model.OAuthClient;
+import st.ana.accounts.oauth.server.service.OAuthClientService;
 
 @Service
 @Slf4j
@@ -77,7 +84,7 @@ public class MasterCodeService {
             masterKey = System.getenv("AMS_INITIAL_MASTER_KEY").split("(?<=\\G.{64})");
         }
 
-        System.out.println("masterKey: "+Arrays.toString(masterKey));
+        log.debug("masterKey: {}", Arrays.toString(masterKey));
     }
 
     @PostConstruct
@@ -98,10 +105,10 @@ public class MasterCodeService {
                             .name("AMS")
                             .authenticationMethods(Set.of("client_secret_post"))
                             .authorizationGrantTypes(Set.of("authorization_code", "refresh_token"))
-                            .redirectUris(Set.of("https://mgnt.ana.st/oauth/anaccount/callback"))
+                            .redirectUris(Set.of(System.getenv("AMS_HOST") + "/oauth/anaccount/callback"))
                             .postLogoutRedirectUris(Set.of())
-                            .clientSettings(mapper.writeValueAsString(ClientSettings.builder().requireProofKey(true).requireAuthorizationConsent(false).build()))
-                            .tokenSettings(mapper.writeValueAsString(TokenSettings.builder().accessTokenTimeToLive(Duration.ofHours(2)).refreshTokenTimeToLive(Duration.ofDays(7)).build()))
+                            .clientSettings(mapper.writeValueAsString(ClientSettings.builder().requireProofKey(true).requireAuthorizationConsent(false).build().getSettings()))
+                            .tokenSettings(mapper.writeValueAsString(TokenSettings.builder().accessTokenTimeToLive(Duration.ofHours(2)).refreshTokenTimeToLive(Duration.ofDays(7)).build().getSettings()))
                             .scopes(Set.of("email", "profile"))
                             .build()
             );
@@ -160,7 +167,7 @@ public class MasterCodeService {
             String val = RestClient.builder()
                     .build()
                     .patch()
-                    .uri("https://" + System.getenv("AMS_HOST") + "/api/masterkey/update")
+                    .uri(System.getenv("AMS_HOST") + "/api/masterkey/update")
                     .header("X-CLIENT-ID", System.getenv("AMS_CLIENT_ID"))
                     .body(encrypt("AMS_MASTER_" + masterKey[0] + masterKey[1] + masterKey[2], current))
                     .retrieve()

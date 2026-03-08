@@ -15,7 +15,6 @@ import st.ana.accounts.oauth.server.repository.OAuthClientRepository;
 import st.ana.accounts.oauth.server.service.OAuthClientService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/mgnt/oauth/clients")
