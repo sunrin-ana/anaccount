@@ -2,6 +2,8 @@ package st.ana.accounts.oauth.server.config;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
@@ -120,6 +122,8 @@ public class OAuthServerConfig {
                 claims.put(StandardClaimNames.PREFERRED_USERNAME, user.getHandle());
                 claims.put("generation", user.getGeneration());
             }
+        } else {
+            claims.put(StandardClaimNames.SUB, id);
         }
         return claims;
     }
@@ -178,7 +182,30 @@ public class OAuthServerConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();
+        return new PasswordEncoder() {
+            @Override
+            public String encode(CharSequence rawPassword) {
+                return bcrypt.encode(sha256(rawPassword));
+            }
+
+            @Override
+            public boolean matches(CharSequence rawPassword, String encodedPassword) {
+                return bcrypt.matches(sha256(rawPassword), encodedPassword);
+            }
+
+            private String sha256(CharSequence input) {
+                try {
+                    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                    byte[] hash = digest.digest(input.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    StringBuilder hex = new StringBuilder(64);
+                    for (byte b : hash) hex.append(String.format("%02x", b));
+                    return hex.toString();
+                } catch (NoSuchAlgorithmException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+        };
     }
 
     @Bean

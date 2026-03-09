@@ -27,6 +27,8 @@ services:
   app:
     build: .
     env_file: .env
+    volumes:
+      - ./masterkey:/data/masterkey
     ports:
       - "8080:8080"
     depends_on:

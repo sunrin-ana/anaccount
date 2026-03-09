@@ -1,16 +1,17 @@
 package st.ana.accounts.oauth.client;
 
-import lombok.Getter;
+import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import st.ana.accounts.user.model.User;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.stream.Collectors;
+import lombok.Getter;
+import st.ana.accounts.user.model.User;
 
 @Getter
 public class OIDCUserPrincipal implements OidcUser {
@@ -36,7 +37,7 @@ public class OIDCUserPrincipal implements OidcUser {
 
     @Override
     public String getName() {
-        return user.getName();
+        return user.getHandle();
     }
 
     @Override

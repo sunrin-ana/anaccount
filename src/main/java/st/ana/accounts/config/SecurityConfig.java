@@ -28,7 +28,7 @@ public class SecurityConfig {
         http
             .addFilterBefore(masterCodeAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/signup", "/oauth2/consent", "/device-code", "/css/**", "/images/**", "/error").permitAll()
+                .requestMatchers("/login", "/oauth2/consent", "/device-code", "/css/**", "/images/**", "/error").permitAll()
                 .requestMatchers("/signup").hasRole("UNKNOWN")
                 .anyRequest().authenticated()
             ).oauth2Login(oauth2 -> oauth2

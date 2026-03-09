@@ -1,6 +1,7 @@
 package st.ana.accounts.oauth.server.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -97,8 +98,8 @@ public class OAuthManagementController {
                     .authorizationGrantTypes(req.authorizationGrantTypes())
                     .allowedRoles(req.allowedRoles())
                     .amsRefer(req.amsRefer())
-                    .clientSettings(objectMapper.writeValueAsString(req.clientSettings()))
-                    .tokenSettings(objectMapper.writeValueAsString(req.tokenSettings()))
+                    .clientSettings(objectMapper.writeValueAsString(req.clientSettings() != null ? req.clientSettings() : Map.of()))
+                    .tokenSettings(objectMapper.writeValueAsString(req.tokenSettings() != null ? req.tokenSettings() : Map.of()))
                     .build();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -115,8 +116,8 @@ public class OAuthManagementController {
             client.setAuthorizationGrantTypes(req.authorizationGrantTypes());
             client.setAllowedRoles(req.allowedRoles());
             client.setAmsRefer(req.amsRefer());
-            client.setClientSettings(objectMapper.writeValueAsString(req.clientSettings()));
-            client.setTokenSettings(objectMapper.writeValueAsString(req.tokenSettings()));
+            client.setClientSettings(objectMapper.writeValueAsString(req.clientSettings() != null ? req.clientSettings() : Map.of()));
+            client.setTokenSettings(objectMapper.writeValueAsString(req.tokenSettings() != null ? req.tokenSettings() : Map.of()));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
