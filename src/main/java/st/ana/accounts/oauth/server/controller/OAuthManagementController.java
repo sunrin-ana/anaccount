@@ -1,20 +1,30 @@
 package st.ana.accounts.oauth.server.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
 import st.ana.accounts.oauth.server.dto.OAuthRequests;
 import st.ana.accounts.oauth.server.dto.OAuthResponses;
 import st.ana.accounts.oauth.server.model.OAuthClient;
 import st.ana.accounts.oauth.server.repository.OAuthClientRepository;
 import st.ana.accounts.oauth.server.service.OAuthClientService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/mgnt/oauth/clients")
@@ -68,8 +78,11 @@ public class OAuthManagementController {
     public OAuthResponses.OAuthClientResponse rotateSecret(@PathVariable String id) {
         OAuthClient client = clientRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        client.setSecret(clientService.generateClientSecret());
-        return toResponse(clientRepository.save(client), true);
+        String rawSecret = clientService.generateClientSecret();
+        client.setSecret(clientService.encodeSecret(rawSecret));
+        clientRepository.save(client);
+        client.setSecret(rawSecret);
+        return toResponse(client, true);
     }
 
     private OAuthClient buildFromCreate(String id, OAuthRequests.CreateClientRequest req) {
