@@ -6,8 +6,6 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - anaccount-network
-    ports:
-      - "5432"
     labels:
       - "org.springframework.boot.service-connection=postgres"
     healthcheck:
@@ -31,7 +29,10 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    networks:
+      - anaccount-network
 
 volumes:
   postgres_data:
