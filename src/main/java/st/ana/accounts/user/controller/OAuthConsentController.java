@@ -3,7 +3,6 @@ package st.ana.accounts.user.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -35,23 +34,5 @@ public class OAuthConsentController {
         model.addAttribute("state", state);
 
         return "oauth-consent";
-    }
-
-    /**
-     * Handles the user's consent decision (approve / deny).
-     * TODO: delegate to the authorization server's approval endpoint.
-     */
-    @PostMapping
-    public String submitConsent(
-            @RequestParam(name = "client_id") String clientId,
-            @RequestParam(name = "state", required = false, defaultValue = "") String state,
-            @RequestParam(name = "decision") String decision) {
-
-        if ("approve".equals(decision)) {
-            // TODO: forward approval to the authorization server
-            return "redirect:/";
-        }
-
-        return "redirect:/";
     }
 }

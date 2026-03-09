@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.stereotype.Service;
 
@@ -111,7 +112,7 @@ public class RegisteredClientService implements RegisteredClientRepository {
             "settings.token.device-code-time-to-live"
     );
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static Map<String, Object> fixDurations(Map<String, Object> settings) {
         Map<String, Object> result = new HashMap<>(settings);
         for (String key : DURATION_KEYS) {
@@ -124,6 +125,16 @@ public class RegisteredClientService implements RegisteredClientRepository {
                 result.put(key, Duration.ofSeconds(seconds, nanos));
             }
         }
+        
+        Object tokenFormat = result.get("settings.token.access-token-format");
+        if (tokenFormat instanceof Map map) {
+            if (map.containsKey("value")) {
+                result.put("settings.token.access-token-format", new OAuth2TokenFormat(map.get("value").toString()));
+            }
+        } else if (tokenFormat instanceof String str) {
+            result.put("settings.token.access-token-format", new OAuth2TokenFormat(str));
+        }
+        
         return result;
     }
 }

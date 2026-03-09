@@ -25,7 +25,6 @@ import org.springframework.security.config.annotation.web.configurers.oauth2.ser
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -135,8 +134,7 @@ public class OAuthServerConfig {
             Authentication principal = context.getPrincipal();
             log.info("JWT : principal: {}", principal);
             OIDCUserPrincipal p = null;
-            if (principal instanceof OAuth2AuthenticationToken token &&
-                    token.getPrincipal() instanceof OIDCUserPrincipal oidcPrincipal) {
+            if (principal != null && principal.getPrincipal() instanceof OIDCUserPrincipal oidcPrincipal) {
                 p = oidcPrincipal;
             }
             if (p == null) return;
