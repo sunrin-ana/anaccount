@@ -109,7 +109,7 @@ public class MasterCodeService {
                             .postLogoutRedirectUris(Set.of())
                             .clientSettings(mapper.writeValueAsString(ClientSettings.builder().requireProofKey(true).requireAuthorizationConsent(false).build().getSettings()))
                             .tokenSettings(mapper.writeValueAsString(TokenSettings.builder().accessTokenTimeToLive(Duration.ofHours(2)).refreshTokenTimeToLive(Duration.ofDays(7)).build().getSettings()))
-                            .scopes(Set.of("email", "profile"))
+                            .scopes(Set.of("openid"))
                             .build()
             );
 
