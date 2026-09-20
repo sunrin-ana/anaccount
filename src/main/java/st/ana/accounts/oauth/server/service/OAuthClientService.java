@@ -2,9 +2,11 @@ package st.ana.accounts.oauth.server.service;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Set;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.hash.Hashing;
 
@@ -48,6 +50,30 @@ public class OAuthClientService {
                     saved.setSecret(rawSecret);
                     return saved;
                 });
+    }
+
+    @Transactional
+    public OAuthClient updateClient(String id, OAuthClient update) {
+        OAuthClient existing = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Client not found: " + id));
+        existing.setName(update.getName());
+        existing.setAmsRefer(update.getAmsRefer());
+        existing.setClientSettings(update.getClientSettings());
+        existing.setTokenSettings(update.getTokenSettings());
+        replaceCollection(existing.getScopes(), update.getScopes());
+        replaceCollection(existing.getRedirectUris(), update.getRedirectUris());
+        replaceCollection(existing.getPostLogoutRedirectUris(), update.getPostLogoutRedirectUris());
+        replaceCollection(existing.getAuthenticationMethods(), update.getAuthenticationMethods());
+        replaceCollection(existing.getAuthorizationGrantTypes(), update.getAuthorizationGrantTypes());
+        replaceCollection(existing.getAllowedRoles(), update.getAllowedRoles());
+        return existing; // dirty checking으로 자동 flush
+    }
+
+    private void replaceCollection(Set<String> target, Set<String> source) {
+        target.clear();
+        if (source != null) {
+            target.addAll(source);
+        }
     }
 
     public String generateClientId() {

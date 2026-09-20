@@ -2,7 +2,6 @@ package st.ana.accounts.oauth.server.controller;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -63,10 +62,9 @@ public class OAuthManagementController {
 
     @PutMapping("/{id}")
     public OAuthResponses.OAuthClientResponse updateClient(@PathVariable String id, @RequestBody OAuthRequests.UpdateClientRequest req) {
-        OAuthClient existing = clientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        applyUpdate(existing, req);
-        return toResponse(clientRepository.save(existing), false);
+        OAuthClient update = buildFromUpdate(req);
+        OAuthClient saved = clientService.updateClient(id, update);
+        return toResponse(saved, false);
     }
 
     @DeleteMapping("/{id}")
@@ -107,27 +105,23 @@ public class OAuthManagementController {
         }
     }
 
-    private void applyUpdate(OAuthClient client, OAuthRequests.UpdateClientRequest req) {
+
+    private OAuthClient buildFromUpdate(OAuthRequests.UpdateClientRequest req) {
         try {
-            client.setName(req.name());
-            updateCollection(client.getScopes(), req.scopes());
-            updateCollection(client.getRedirectUris(), req.redirectUris());
-            updateCollection(client.getPostLogoutRedirectUris(), req.postLogoutRedirectUris());
-            updateCollection(client.getAuthenticationMethods(), req.authenticationMethods());
-            updateCollection(client.getAuthorizationGrantTypes(), req.authorizationGrantTypes());
-            updateCollection(client.getAllowedRoles(), req.allowedRoles());
-            client.setAmsRefer(req.amsRefer());
-            client.setClientSettings(objectMapper.writeValueAsString(req.clientSettings() != null ? req.clientSettings() : Map.of()));
-            client.setTokenSettings(objectMapper.writeValueAsString(req.tokenSettings() != null ? req.tokenSettings() : Map.of()));
+            return OAuthClient.builder()
+                    .name(req.name())
+                    .scopes(req.scopes())
+                    .redirectUris(req.redirectUris())
+                    .postLogoutRedirectUris(req.postLogoutRedirectUris())
+                    .authenticationMethods(req.authenticationMethods())
+                    .authorizationGrantTypes(req.authorizationGrantTypes())
+                    .allowedRoles(req.allowedRoles())
+                    .amsRefer(req.amsRefer())
+                    .clientSettings(objectMapper.writeValueAsString(req.clientSettings() != null ? req.clientSettings() : Map.of()))
+                    .tokenSettings(objectMapper.writeValueAsString(req.tokenSettings() != null ? req.tokenSettings() : Map.of()))
+                    .build();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private void updateCollection(Set<String> existing, Set<String> incoming) {
-        existing.clear();
-        if (incoming != null) {
-            existing.addAll(incoming);
         }
     }
 
