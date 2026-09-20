@@ -1,10 +1,14 @@
 package st.ana.accounts.oauth.server.dto;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
 import java.util.Map;
 import java.util.Set;
 
 public final class OAuthRequests {
 
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record CreateClientRequest(
             String name,
             Set<String> scopes,
@@ -18,6 +22,7 @@ public final class OAuthRequests {
             Map<String, Object> tokenSettings
     ) {}
 
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record UpdateClientRequest(
             String id,
             String name,
@@ -32,6 +37,7 @@ public final class OAuthRequests {
             Map<String, Object> tokenSettings
     ) {}
 
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record DeleteClientRequest(
             String id
     ) {}

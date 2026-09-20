@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -48,12 +47,9 @@ public class OAuthManagementController {
 
     @GetMapping("/{id}")
     public OAuthResponses.OAuthClientResponse getClient(@PathVariable String id) {
-        return findClientById(id);
-    }
-
-    @GetMapping(params = "id")
-    public OAuthResponses.OAuthClientResponse getClientByParam(@RequestParam String id) {
-        return findClientById(id);
+        return clientRepository.findById(id)
+                .map(c -> toResponse(c, false))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     @PostMapping
@@ -66,61 +62,21 @@ public class OAuthManagementController {
 
     @PutMapping("/{id}")
     public OAuthResponses.OAuthClientResponse updateClient(@PathVariable String id, @RequestBody OAuthRequests.UpdateClientRequest req) {
-        return doUpdateClient(id, req);
-    }
-
-    @PutMapping
-    public OAuthResponses.OAuthClientResponse updateClientFromBody(@RequestBody OAuthRequests.UpdateClientRequest req, @RequestParam(required = false) String id) {
-        String targetId = (req != null && req.id() != null && !req.id().isBlank()) ? req.id() : id;
-        if (targetId == null || targetId.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Client ID is required");
-        return doUpdateClient(targetId, req);
-    }
-
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteClient(@PathVariable String id) {
-        doDeleteClient(id);
-    }
-
-    @DeleteMapping
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteClientFromBody(@RequestBody(required = false) OAuthRequests.DeleteClientRequest req, @RequestParam(required = false) String id) {
-        String targetId = (req != null && req.id() != null && !req.id().isBlank()) ? req.id() : id;
-        if (targetId == null || targetId.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Client ID is required");
-        doDeleteClient(targetId);
-    }
-
-    @PostMapping("/{id}/rotate-secret")
-    public OAuthResponses.OAuthClientResponse rotateSecret(@PathVariable String id) {
-        return doRotateSecret(id);
-    }
-
-    @PostMapping("/rotate-secret")
-    public OAuthResponses.OAuthClientResponse rotateSecretFromBody(@RequestBody(required = false) OAuthRequests.DeleteClientRequest req, @RequestParam(required = false) String id) {
-        String targetId = (req != null && req.id() != null && !req.id().isBlank()) ? req.id() : id;
-        if (targetId == null || targetId.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Client ID is required");
-        return doRotateSecret(targetId);
-    }
-
-    private OAuthResponses.OAuthClientResponse findClientById(String id) {
-        return clientRepository.findById(id)
-                .map(c -> toResponse(c, false))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    }
-
-    private OAuthResponses.OAuthClientResponse doUpdateClient(String id, OAuthRequests.UpdateClientRequest req) {
         OAuthClient existing = clientRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         applyUpdate(existing, req);
         return toResponse(clientRepository.save(existing), false);
     }
 
-    private void doDeleteClient(String id) {
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteClient(@PathVariable String id) {
         if (!clientRepository.existsById(id)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         clientRepository.deleteById(id);
     }
 
-    private OAuthResponses.OAuthClientResponse doRotateSecret(String id) {
+    @PostMapping("/{id}/rotate-secret")
+    public OAuthResponses.OAuthClientResponse rotateSecret(@PathVariable String id) {
         OAuthClient client = clientRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         String rawSecret = clientService.generateClientSecret();

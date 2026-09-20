@@ -63,6 +63,13 @@ public class OAuthClientService {
                 Base64.getUrlEncoder().withoutPadding().encodeToString(Hashing.sha512().hashBytes(bytes).asBytes()) + ".SECRET.accounts.ana.st";
     }
 
+    public void deleteClient(String id) {
+        if (!repository.existsById(id)) {
+            throw new IllegalArgumentException("Client not found with id: " + id);
+        }
+        repository.deleteById(id);
+    }
+
     public String encodeSecret(String rawSecret) {
         return passwordEncoder.encode(rawSecret);
     }
