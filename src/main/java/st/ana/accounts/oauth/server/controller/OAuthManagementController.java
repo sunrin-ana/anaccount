@@ -2,6 +2,7 @@ package st.ana.accounts.oauth.server.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -109,17 +110,24 @@ public class OAuthManagementController {
     private void applyUpdate(OAuthClient client, OAuthRequests.UpdateClientRequest req) {
         try {
             client.setName(req.name());
-            client.setScopes(req.scopes());
-            client.setRedirectUris(req.redirectUris());
-            client.setPostLogoutRedirectUris(req.postLogoutRedirectUris());
-            client.setAuthenticationMethods(req.authenticationMethods());
-            client.setAuthorizationGrantTypes(req.authorizationGrantTypes());
-            client.setAllowedRoles(req.allowedRoles());
+            updateCollection(client.getScopes(), req.scopes());
+            updateCollection(client.getRedirectUris(), req.redirectUris());
+            updateCollection(client.getPostLogoutRedirectUris(), req.postLogoutRedirectUris());
+            updateCollection(client.getAuthenticationMethods(), req.authenticationMethods());
+            updateCollection(client.getAuthorizationGrantTypes(), req.authorizationGrantTypes());
+            updateCollection(client.getAllowedRoles(), req.allowedRoles());
             client.setAmsRefer(req.amsRefer());
             client.setClientSettings(objectMapper.writeValueAsString(req.clientSettings() != null ? req.clientSettings() : Map.of()));
             client.setTokenSettings(objectMapper.writeValueAsString(req.tokenSettings() != null ? req.tokenSettings() : Map.of()));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void updateCollection(Set<String> existing, Set<String> incoming) {
+        existing.clear();
+        if (incoming != null) {
+            existing.addAll(incoming);
         }
     }
 
