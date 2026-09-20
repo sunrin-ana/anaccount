@@ -51,14 +51,16 @@ public class OAuthClientService {
     }
 
     public String generateClientId() {
-        return Base64.getEncoder().encodeToString(Hashing.sha512().hashLong(timeProvider.getTime()).asBytes())+"."+Base64.getEncoder().encodeToString(Hashing.sha512().hashLong(System.currentTimeMillis()).asBytes())+".accounts.ana.st";
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(Hashing.sha512().hashLong(timeProvider.getTime()).asBytes()) + "." +
+                Base64.getUrlEncoder().withoutPadding().encodeToString(Hashing.sha512().hashLong(System.currentTimeMillis()).asBytes()) + ".accounts.ana.st";
     }
 
     public String generateClientSecret() {
         byte[] bytes = new byte[128];
         random.nextBytes(bytes);
 
-        return Base64.getEncoder().encodeToString(Hashing.sha512().hashLong(timeProvider.getTime()).asBytes())+"."+Base64.getEncoder().encodeToString(Hashing.sha512().hashBytes(bytes).asBytes())+".SECRET.accounts.ana.st";
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(Hashing.sha512().hashLong(timeProvider.getTime()).asBytes()) + "." +
+                Base64.getUrlEncoder().withoutPadding().encodeToString(Hashing.sha512().hashBytes(bytes).asBytes()) + ".SECRET.accounts.ana.st";
     }
 
     public String encodeSecret(String rawSecret) {

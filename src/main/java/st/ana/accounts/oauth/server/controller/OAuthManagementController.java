@@ -47,9 +47,12 @@ public class OAuthManagementController {
 
     @GetMapping("/{id}")
     public OAuthResponses.OAuthClientResponse getClient(@PathVariable String id) {
-        return clientRepository.findById(id)
-                .map(c -> toResponse(c, false))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return findClientById(id);
+    }
+
+    @GetMapping(params = "id")
+    public OAuthResponses.OAuthClientResponse getClientByParam(@RequestParam String id) {
+        return findClientById(id);
     }
 
     @PostMapping
@@ -62,21 +65,55 @@ public class OAuthManagementController {
 
     @PutMapping("/{id}")
     public OAuthResponses.OAuthClientResponse updateClient(@PathVariable String id, @RequestBody OAuthRequests.UpdateClientRequest req) {
+        return doUpdateClient(id, req);
+    }
+
+    @PutMapping(params = "id")
+    public OAuthResponses.OAuthClientResponse updateClientByParam(@RequestParam String id, @RequestBody OAuthRequests.UpdateClientRequest req) {
+        return doUpdateClient(id, req);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteClient(@PathVariable String id) {
+        doDeleteClient(id);
+    }
+
+    @DeleteMapping(params = "id")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteClientByParam(@RequestParam String id) {
+        doDeleteClient(id);
+    }
+
+    @PostMapping("/{id}/rotate-secret")
+    public OAuthResponses.OAuthClientResponse rotateSecret(@PathVariable String id) {
+        return doRotateSecret(id);
+    }
+
+    @PostMapping(value = "/rotate-secret", params = "id")
+    public OAuthResponses.OAuthClientResponse rotateSecretByParam(@RequestParam String id) {
+        return doRotateSecret(id);
+    }
+
+    private OAuthResponses.OAuthClientResponse findClientById(String id) {
+        return clientRepository.findById(id)
+                .map(c -> toResponse(c, false))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    private OAuthResponses.OAuthClientResponse doUpdateClient(String id, OAuthRequests.UpdateClientRequest req) {
         OAuthClient existing = clientRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         applyUpdate(existing, req);
         return toResponse(clientRepository.save(existing), false);
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteClient(@PathVariable String id) {
+    private void doDeleteClient(String id) {
         if (!clientRepository.existsById(id)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         clientRepository.deleteById(id);
     }
 
-    @PostMapping("/{id}/rotate-secret")
-    public OAuthResponses.OAuthClientResponse rotateSecret(@PathVariable String id) {
+    private OAuthResponses.OAuthClientResponse doRotateSecret(String id) {
         OAuthClient client = clientRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         String rawSecret = clientService.generateClientSecret();
