@@ -64,11 +64,8 @@ public class OAuthManagementController {
 
     @PutMapping("/{id}")
     public OAuthResponses.OAuthClientResponse updateClient(@PathVariable String id, @RequestBody OAuthRequests.UpdateClientRequest req) {
-        log.info("req: {}", req);
         OAuthClient update = buildFromUpdate(req);
-        log.info("update: {}", update);
         OAuthClient saved = clientService.updateClient(id, update);
-        log.info("saved: {}", saved);
         return toResponse(saved, false);
     }
 
