@@ -26,6 +26,7 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http, OIDCUserService oidcUserService) {
         http
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
             .addFilterBefore(masterCodeAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/oauth2/consent", "/device-code", "/css/**", "/images/**", "/error").permitAll()
