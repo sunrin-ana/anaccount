@@ -19,6 +19,7 @@ public final class OAuthRequests {
     ) {}
 
     public record UpdateClientRequest(
+            String id,
             String name,
             Set<String> scopes,
             Set<String> redirectUris,
@@ -29,5 +30,9 @@ public final class OAuthRequests {
             String amsRefer,
             Map<String, Object> clientSettings,
             Map<String, Object> tokenSettings
+    ) {}
+
+    public record DeleteClientRequest(
+            String id
     ) {}
 }

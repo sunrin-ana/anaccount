@@ -69,9 +69,11 @@ public class OAuthManagementController {
         return doUpdateClient(id, req);
     }
 
-    @PutMapping(params = "id")
-    public OAuthResponses.OAuthClientResponse updateClientByParam(@RequestParam String id, @RequestBody OAuthRequests.UpdateClientRequest req) {
-        return doUpdateClient(id, req);
+    @PutMapping
+    public OAuthResponses.OAuthClientResponse updateClientFromBody(@RequestBody OAuthRequests.UpdateClientRequest req, @RequestParam(required = false) String id) {
+        String targetId = (req != null && req.id() != null && !req.id().isBlank()) ? req.id() : id;
+        if (targetId == null || targetId.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Client ID is required");
+        return doUpdateClient(targetId, req);
     }
 
     @DeleteMapping("/{id}")
@@ -80,10 +82,12 @@ public class OAuthManagementController {
         doDeleteClient(id);
     }
 
-    @DeleteMapping(params = "id")
+    @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteClientByParam(@RequestParam String id) {
-        doDeleteClient(id);
+    public void deleteClientFromBody(@RequestBody(required = false) OAuthRequests.DeleteClientRequest req, @RequestParam(required = false) String id) {
+        String targetId = (req != null && req.id() != null && !req.id().isBlank()) ? req.id() : id;
+        if (targetId == null || targetId.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Client ID is required");
+        doDeleteClient(targetId);
     }
 
     @PostMapping("/{id}/rotate-secret")
@@ -91,9 +95,11 @@ public class OAuthManagementController {
         return doRotateSecret(id);
     }
 
-    @PostMapping(value = "/rotate-secret", params = "id")
-    public OAuthResponses.OAuthClientResponse rotateSecretByParam(@RequestParam String id) {
-        return doRotateSecret(id);
+    @PostMapping("/rotate-secret")
+    public OAuthResponses.OAuthClientResponse rotateSecretFromBody(@RequestBody(required = false) OAuthRequests.DeleteClientRequest req, @RequestParam(required = false) String id) {
+        String targetId = (req != null && req.id() != null && !req.id().isBlank()) ? req.id() : id;
+        if (targetId == null || targetId.isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Client ID is required");
+        return doRotateSecret(targetId);
     }
 
     private OAuthResponses.OAuthClientResponse findClientById(String id) {
