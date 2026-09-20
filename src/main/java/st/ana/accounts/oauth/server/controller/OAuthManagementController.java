@@ -26,7 +26,9 @@ import st.ana.accounts.oauth.server.dto.OAuthResponses;
 import st.ana.accounts.oauth.server.model.OAuthClient;
 import st.ana.accounts.oauth.server.repository.OAuthClientRepository;
 import st.ana.accounts.oauth.server.service.OAuthClientService;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/mgnt/oauth/clients")
 @PreAuthorize("hasAuthority('MASTERCODE')")
@@ -62,14 +64,11 @@ public class OAuthManagementController {
 
     @PutMapping("/{id}")
     public OAuthResponses.OAuthClientResponse updateClient(@PathVariable String id, @RequestBody OAuthRequests.UpdateClientRequest req) {
-        System.out.print("req: ");
-        System.out.println(req);
+        log.info("req: {}", req);
         OAuthClient update = buildFromUpdate(req);
-        System.out.print("update: ");
-        System.out.println(update);
+        log.info("update: {}", update);
         OAuthClient saved = clientService.updateClient(id, update);
-        System.out.print("saved: ");
-        System.out.println(saved);
+        log.info("saved: {}", saved);
         return toResponse(saved, false);
     }
 
