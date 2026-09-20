@@ -143,19 +143,24 @@ public class MasterCodeService {
      * @return 마스터코드가 유효한지 여부
      */
     public boolean validateMasterKey(String code) {
-        long current = timeProvider.getTime();
-        current -= current % 300;
-        current /= 15;
+        if (code == null || code.length() != 18) return false;
+
+        long current = timeProvider.getTime() / 15;
+        long[] timeSteps = {current, current - 1, current + 1};
 
         String[] parts = code.split("(?<=\\G.{6})");
+        if (parts.length != 3) return false;
 
-        try {
-            return generator.generate(masterKey[2], current).equals(parts[0])
-                    && generator.generate(masterKey[1], current).equals(parts[1])
-                    && generator.generate(masterKey[0], current).equals(parts[2]);
-        } catch (CodeGenerationException e) {
-            throw new IllegalStateException("Master key generation failed: " + e.getMessage(), e);
+        for (long t : timeSteps) {
+            try {
+                if (generator.generate(masterKey[2], t).equals(parts[0])
+                        && generator.generate(masterKey[1], t).equals(parts[1])
+                        && generator.generate(masterKey[0], t).equals(parts[2])) {
+                    return true;
+                }
+            } catch (CodeGenerationException ignored) {}
         }
+        return false;
     }
 
     @Scheduled(initialDelay = 1000 * 60 * 60 * 24, fixedRate = 1000 * 60 * 60 * 24)
