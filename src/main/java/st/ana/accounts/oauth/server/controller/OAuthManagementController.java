@@ -128,8 +128,7 @@ public class OAuthManagementController {
         return new OAuthResponses.OAuthClientResponse(
                 client.getId(),
                 client.getName(),
-                // includeSecret ? client.getSecret() : null,
-                client.getSecret(),
+                includeSecret ? client.getSecret() : null,
                 client.getScopes(),
                 client.getRedirectUris(),
                 client.getPostLogoutRedirectUris(),
