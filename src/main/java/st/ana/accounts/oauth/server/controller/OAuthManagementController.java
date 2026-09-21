@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,9 +25,7 @@ import st.ana.accounts.oauth.server.dto.OAuthResponses;
 import st.ana.accounts.oauth.server.model.OAuthClient;
 import st.ana.accounts.oauth.server.repository.OAuthClientRepository;
 import st.ana.accounts.oauth.server.service.OAuthClientService;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/mgnt/oauth/clients")
 @PreAuthorize("hasAuthority('MASTERCODE')")
@@ -131,7 +128,8 @@ public class OAuthManagementController {
         return new OAuthResponses.OAuthClientResponse(
                 client.getId(),
                 client.getName(),
-                includeSecret ? client.getSecret() : null,
+                // includeSecret ? client.getSecret() : null,
+                client.getSecret(),
                 client.getScopes(),
                 client.getRedirectUris(),
                 client.getPostLogoutRedirectUris(),
