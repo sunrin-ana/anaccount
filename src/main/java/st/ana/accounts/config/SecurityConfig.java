@@ -34,7 +34,6 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             ).oauth2Login(oauth2 -> oauth2
                 .loginPage("/login")
-                .defaultSuccessUrl("/continue")
                 .userInfoEndpoint(userInfo -> userInfo.oidcUserService(oidcUserService))
             ).logout(
                     logout -> logout
