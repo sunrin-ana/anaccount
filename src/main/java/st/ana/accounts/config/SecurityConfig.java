@@ -11,6 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import st.ana.accounts.masterkey.security.MasterCodeAuthenticationFilter;
 import st.ana.accounts.oauth.client.OIDCUserService;
+import org.springframework.security.web.savedrequest.RequestCache;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -24,10 +25,11 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, OIDCUserService oidcUserService) {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, OIDCUserService oidcUserService, RequestCache requestCache) {
         http
             .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
             .addFilterBefore(masterCodeAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .requestCache(cache -> cache.requestCache(requestCache))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/oauth2/consent", "/device-code", "/css/**", "/images/**", "/error").permitAll()
                 .requestMatchers("/signup").hasRole("UNKNOWN")

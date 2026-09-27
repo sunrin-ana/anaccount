@@ -53,6 +53,8 @@ import st.ana.accounts.oauth.client.OIDCUserPrincipal;
 import st.ana.accounts.oauth.server.service.RegisteredClientService;
 import st.ana.accounts.user.model.User;
 import st.ana.accounts.user.repository.UserRepository;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
 
 @Slf4j
 @Configuration
@@ -66,13 +68,14 @@ public class OAuthServerConfig {
 
     @Bean
     @Order(1)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http, RegisteredClientService service) {
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http, RegisteredClientService service, RequestCache requestCache) {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
 
         http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .securityContext(ctx -> ctx.securityContextRepository(new HttpSessionSecurityContextRepository()))
+                .requestCache(cache -> cache.requestCache(requestCache))
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
                 .with(authorizationServerConfigurer, Customizer.withDefaults());
 
@@ -212,5 +215,10 @@ public class OAuthServerConfig {
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return mapper;
+    }
+
+    @Bean
+    public RequestCache requestCache() {
+        return new HttpSessionRequestCache();
     }
 }
