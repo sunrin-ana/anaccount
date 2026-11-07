@@ -10,9 +10,19 @@ group = 'st.ana'
 version = '0.0.1-SNAPSHOT'
 description = 'anaccount-be'
 
-java {
-    toolchain {
+def hasJava25 = false
+try {
+    hasJava25 = javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(25)
+    }.present
+} catch (Exception ignored) {
+}
+
+if (hasJava25) {
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
     }
 }
 
@@ -47,11 +57,14 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jdbc-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-security-saml2-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'com.h2database:h2'
+    runtimeOnly 'com.h2database:h2'
 
     annotationProcessor 'org.projectlombok:lombok:1.18.42'
 }

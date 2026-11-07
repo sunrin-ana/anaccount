@@ -48,6 +48,15 @@ public class MasterCodeService {
 
     private static final String MASTER_CODE_PATH = "/data/masterkey";
 
+    /**
+     * AMS가 로그인 완료 후 돌아갈 기본 콜백 주소.
+     *
+     * <p>{@code AMS_HOST}는 AMS 백엔드 API 주소라서 OAuth 콜백으로 쓸 수 없다.
+     * 콜백은 사용자가 실제로 보는 AMS 프론트엔드(mgnt.ana.st) 주소이므로 별도
+     * 환경변수({@code AMS_REDIRECT_URI})로 지정하고, 없을 때만 이 값을 사용한다.
+     */
+    private static final String DEFAULT_AMS_REDIRECT_URI = "https://mgnt.ana.st/oauth/anaccount/callback";
+
     private final CodeVerifier verifier;
     private final CodeGenerator generator;
     private final TimeProvider timeProvider;
@@ -55,7 +64,7 @@ public class MasterCodeService {
     private final ObjectMapper mapper;
     private String[] masterKey;
 
-    @Value("${spring.profiles.active}")
+    @Value("${spring.profiles.active:}")
     private String activeProfile;
 
     public MasterCodeService(
@@ -71,17 +80,20 @@ public class MasterCodeService {
 
         File file = new File(MASTER_CODE_PATH);
         if (!file.exists()) {
-            masterKey = System.getenv("AMS_INITIAL_MASTER_KEY").split("(?<=\\G.{64})");
+            String mk = System.getenv("AMS_INITIAL_MASTER_KEY");
+            masterKey = mk == null ? new String[0] : mk.split("(?<=\\G.{64})");
         } else if (file.isFile()) {
             try {
                 masterKey = Files.readString(file.toPath()).split("(?<=\\G.{64})");
             } catch (Exception e) {
                 log.error("Failed to read master key from file, falling back to environment variable", e);
-                masterKey = System.getenv("AMS_INITIAL_MASTER_KEY").split("(?<=\\G.{64})");
+                String mk2 = System.getenv("AMS_INITIAL_MASTER_KEY");
+                masterKey = mk2 == null ? new String[0] : mk2.split("(?<=\\G.{64})");
             }
         }else {
             file.delete();
-            masterKey = System.getenv("AMS_INITIAL_MASTER_KEY").split("(?<=\\G.{64})");
+            String mk3 = System.getenv("AMS_INITIAL_MASTER_KEY");
+            masterKey = mk3 == null ? new String[0] : mk3.split("(?<=\\G.{64})");
         }
 
         log.debug("masterKey: {}", Arrays.toString(masterKey));
@@ -94,8 +106,7 @@ public class MasterCodeService {
 
         while (true) {
             if (count > 3) {
-                log.error("Failed to start");
-                System.exit(1);
+                log.error("Failed to send credentials to AMS after retries");
                 return;
             }
 
@@ -105,11 +116,13 @@ public class MasterCodeService {
                             .name("AMS")
                             .authenticationMethods(Set.of("client_secret_post"))
                             .authorizationGrantTypes(Set.of("authorization_code", "refresh_token"))
-                            .redirectUris(Set.of(System.getenv("AMS_HOST") + "/oauth/anaccount/callback"))
+                            .redirectUris(Set.of(resolveAmsRedirectUri()))
                             .postLogoutRedirectUris(Set.of())
-                            .clientSettings(mapper.writeValueAsString(ClientSettings.builder().requireProofKey(true).requireAuthorizationConsent(false).build().getSettings()))
+                            // Authlib(AMS)은 PKCE를 보내지 않으므로 proof key를 요구하면 authorize 단계에서 실패한다.
+                            .clientSettings(mapper.writeValueAsString(ClientSettings.builder().requireProofKey(false).requireAuthorizationConsent(false).build().getSettings()))
                             .tokenSettings(mapper.writeValueAsString(TokenSettings.builder().accessTokenTimeToLive(Duration.ofHours(2)).refreshTokenTimeToLive(Duration.ofDays(7)).build().getSettings()))
-                            .scopes(Set.of("openid"))
+                            // AMS는 openid email profile을 요청한다. 등록되지 않은 scope를 요청하면 invalid_scope로 거절된다.
+                            .scopes(Set.of("openid", "email", "profile"))
                             .build()
             );
 
@@ -135,6 +148,14 @@ public class MasterCodeService {
             }
             return;
         }
+    }
+
+    private static String resolveAmsRedirectUri() {
+        String configured = System.getenv("AMS_REDIRECT_URI");
+        if (configured != null && !configured.isBlank()) {
+            return configured.trim();
+        }
+        return DEFAULT_AMS_REDIRECT_URI;
     }
 
     /**
