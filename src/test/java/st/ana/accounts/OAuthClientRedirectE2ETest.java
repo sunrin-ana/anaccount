@@ -221,6 +221,60 @@ class OAuthClientRedirectE2ETest {
         assertThat(responseParams.get("code")).isNotBlank();
     }
 
+    /**
+     * assignment.ana.st actually sends the browser to {@code /login} with the
+     * authorization request parameters appended (instead of
+     * {@code /oauth2/authorize}). The login page must hand that request over to the
+     * authorization endpoint, otherwise the saved request is lost and the user never
+     * returns to the client after Google login.
+     */
+    @Test
+    void loginEntryPointHandsAuthorizationRequestToAuthorizeEndpoint() throws Exception {
+        String base = "http://localhost:" + this.port;
+
+        // Same shape as https://assignment.ana.st/api/auth/login produces, including
+        // '+' encoded scopes and PKCE.
+        String query = "client_id=" + CLIENT_ID
+                + "&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
+                + "&code_challenge_method=S256"
+                + "&redirect_uri=" + enc(CLIENT_REDIRECT_URI)
+                + "&response_type=code"
+                + "&scope=openid+profile+email"
+                + "&state=" + enc(STATE);
+
+        HttpResponse<String> login = get(base + "/login?" + query);
+        System.out.println("[E2E] /login with authorize params -> " + login.statusCode() + " " + location(login));
+
+        assertThat(login.statusCode()).as("login entry point").isEqualTo(302);
+        assertThat(location(login))
+                .as("authorization request must be forwarded verbatim, including '+' encoded scopes")
+                .isEqualTo(base + "/oauth2/authorize?" + query);
+
+        // The authorization endpoint saves the request and asks the user to log in.
+        HttpResponse<String> authorize = get(location(login));
+        assertThat(authorize.statusCode()).isEqualTo(302);
+        assertThat(location(authorize)).as("login redirect").isEqualTo(base + "/login");
+
+        // Google round trip.
+        HttpResponse<String> googleRedirect = get(base + "/oauth2/authorization/google");
+        Map<String, String> googleParams = queryParams(URI.create(location(googleRedirect)).getRawQuery());
+        idTokenNonce = googleParams.get("nonce");
+        HttpResponse<String> callback = get(base + "/login/oauth2/code/google"
+                + "?code=mock-code&state=" + enc(googleParams.get("state")));
+        System.out.println("[E2E] google callback -> " + callback.statusCode() + " " + location(callback));
+
+        assertThat(location(callback)).as("saved authorize request replay").startsWith(base + "/oauth2/authorize?");
+
+        HttpResponse<String> completed = get(location(callback));
+        System.out.println("[E2E] authorize replay -> " + completed.statusCode() + " " + location(completed));
+        assertThat(completed.statusCode()).isEqualTo(302);
+        assertThat(location(completed))
+                .as("must redirect back to the client that started at /login")
+                .startsWith(CLIENT_REDIRECT_URI);
+        assertThat(queryParams(URI.create(location(completed)).getRawQuery()))
+                .containsEntry("state", STATE);
+    }
+
     private HttpResponse<String> get(String url) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder(URI.create(url))
                 .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
