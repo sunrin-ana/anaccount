@@ -98,16 +98,6 @@ public class RegisteredClientService implements RegisteredClientRepository {
                 .build();
     }
 
-    /**
-     * DB에 저장된 client_settings(JSON)로 {@link ClientSettings}를 만든다.
-     *
-     * <p>
-     * Spring Authorization Server 7부터 {@code ClientSettings.builder()}의
-     * {@code requireProofKey} 기본값이 {@code true}로 바뀌었다. 반면 DB에 저장된
-     * 설정이 {@code {}}인 기존 클라이언트(예: PKCE를 사용하지 않는 third-party
-     * client)는 SAS 6까지의 기본값인 {@code false}를 기대한다. 그래서 SAS 6과 동일한
-     * 기본값을 먼저 두고, DB에 명시된 값이 있으면 그것으로 덮어쓴다.
-     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private ClientSettings readClientSettings(String storedSettings) {
         Map<String, Object> settings = new HashMap<>();

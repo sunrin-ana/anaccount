@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -37,10 +38,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import st.ana.accounts.oauth.server.model.OAuthClient;
 import st.ana.accounts.oauth.server.repository.OAuthClientRepository;
+import st.ana.accounts.user.model.User;
+import st.ana.accounts.user.repository.UserRepository;
 
 /**
  * Reproduces the full "third-party client logs in through anaccount" flow:
@@ -115,6 +119,12 @@ class OAuthClientRedirectE2ETest {
     @Autowired
     private RegisteredClientRepository registeredClientRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     private final HttpClient browser = HttpClient.newBuilder()
             .cookieHandler(new CookieManager())
             .followRedirects(HttpClient.Redirect.NEVER)
@@ -131,15 +141,29 @@ class OAuthClientRedirectE2ETest {
         clientRepository.save(OAuthClient.builder()
                 .id(CLIENT_ID)
                 .name("Assignment")
-                .secret("secret")
+                // 실제 DB에는 OAuthClientService가 passwordEncoder로 인코딩해 저장한다.
+                .secret(passwordEncoder.encode("secret"))
                 .scopes(Set.of("openid", "email", "profile"))
                 .redirectUris(Set.of(CLIENT_REDIRECT_URI))
                 .postLogoutRedirectUris(Set.of())
-                .authenticationMethods(Set.of("client_secret_post"))
+                .authenticationMethods(Set.of("client_secret_post", "client_secret_basic"))
                 .authorizationGrantTypes(Set.of("authorization_code", "refresh_token"))
                 .clientSettings("{}")
                 .tokenSettings("{}")
                 .allowedRoles(Set.of())
+                .build());
+
+        userRepository.save(User.builder()
+                .id(1L)
+                .handle("test")
+                .googleId("google-sub-1")
+                .email("test@sunrint.hs.kr")
+                .generation(1)
+                .name("Test User")
+                .phoneNumber("010-0000-0000")
+                .roles(Set.of("ROLE_USER"))
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .build());
     }
 
@@ -273,6 +297,95 @@ class OAuthClientRedirectE2ETest {
                 .startsWith(CLIENT_REDIRECT_URI);
         assertThat(queryParams(URI.create(location(completed)).getRawQuery()))
                 .containsEntry("state", STATE);
+    }
+
+    /**
+     * 서드파티 클라이언트(assignment.ana.st)의 실제 순서를 표준 엔드포인트로 검증한다:
+     * authorize(PKCE) → Google → code → /oauth2/token(Basic) → /userinfo.
+     *
+     * <p>
+     * UserInfo 응답은 OIDC Core 1.0 §5.1의 표준 claim을 최상위에 담아야 한다.
+     * 특히 {@code email_verified}가 없으면 클라이언트는 {@code email}을 신뢰하지
+     * 않는다(§5.3). {@code /api/user/me}는 표준 userinfo가 아닌 별도 커스텀 API이며,
+     * 클라이언트는 discovery의 {@code userinfo_endpoint}를 사용해야 한다.
+     */
+    @Test
+    void tokenAndUserInfoExposeStandardOidcClaims() throws Exception {
+        String base = "http://localhost:" + this.port;
+        // RFC 7636 Appendix B 예시 쌍
+        String verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
+        String challenge = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM";
+
+        // 1. authorization code (PKCE)
+        String authorizeUrl = base + "/oauth2/authorize"
+                + "?client_id=" + CLIENT_ID
+                + "&response_type=code"
+                + "&redirect_uri=" + enc(CLIENT_REDIRECT_URI)
+                + "&scope=" + enc("openid email profile")
+                + "&state=" + enc(STATE)
+                + "&code_challenge=" + challenge
+                + "&code_challenge_method=S256";
+        HttpResponse<String> authorize = get(authorizeUrl);
+        assertThat(location(authorize)).isEqualTo(base + "/login");
+
+        HttpResponse<String> googleRedirect = get(base + "/oauth2/authorization/google");
+        Map<String, String> googleParams = queryParams(URI.create(location(googleRedirect)).getRawQuery());
+        idTokenNonce = googleParams.get("nonce");
+        HttpResponse<String> callback = get(base + "/login/oauth2/code/google"
+                + "?code=mock-code&state=" + enc(googleParams.get("state")));
+        HttpResponse<String> completed = get(location(callback));
+        String code = queryParams(URI.create(location(completed)).getRawQuery()).get("code");
+        assertThat(code).as("authorization code").isNotBlank();
+
+        // 2. token exchange (client_secret_basic, assignment와 동일)
+        String form = "grant_type=authorization_code"
+                + "&code=" + enc(code)
+                + "&redirect_uri=" + enc(CLIENT_REDIRECT_URI)
+                + "&client_id=" + enc(CLIENT_ID)
+                + "&code_verifier=" + enc(verifier);
+        String basic = "Basic " + Base64.getEncoder()
+                .encodeToString((CLIENT_ID + ":secret").getBytes(StandardCharsets.UTF_8));
+        HttpResponse<String> tokenResponse = postForm(base + "/oauth2/token", form, basic);
+        System.out.println("[E2E] token -> " + tokenResponse.statusCode() + " " + tokenResponse.body());
+        assertThat(tokenResponse.statusCode()).as(tokenResponse.body()).isEqualTo(200);
+        String accessToken = MAPPER.readTree(tokenResponse.body()).path("access_token").asText();
+        assertThat(accessToken).isNotBlank();
+
+        // 3. 표준 OIDC userinfo
+        HttpResponse<String> userInfo = getJson(base + "/userinfo", accessToken);
+        System.out.println("[E2E] userinfo -> " + userInfo.statusCode() + " " + userInfo.body());
+        assertThat(userInfo.statusCode()).as(userInfo.body()).isEqualTo(200);
+        JsonNode info = MAPPER.readTree(userInfo.body());
+        assertThat(info.path("sub").asText()).isEqualTo("test");
+        assertThat(info.path("name").asText()).isEqualTo("Test User");
+        assertThat(info.path("email").asText()).isEqualTo("test@sunrint.hs.kr");
+        assertThat(info.path("email_verified").asBoolean()).isTrue();
+
+        // 4. /api/user/me는 표준 userinfo가 아닌 커스텀 API이므로 기존 응답 구조를 유지한다.
+        //    (클라이언트는 /userinfo를 사용한다.)
+        HttpResponse<String> me = getJson(base + "/api/user/me", accessToken);
+        assertThat(me.statusCode()).as(me.body()).isEqualTo(200);
+        assertThat(MAPPER.readTree(me.body()).at("/user_info/sub").asText()).isEqualTo("test");
+    }
+
+    private HttpResponse<String> postForm(String url, String form, String authorization)
+            throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .header("Accept", "application/json")
+                .header("Authorization", authorization)
+                .POST(HttpRequest.BodyPublishers.ofString(form))
+                .build();
+        return this.browser.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    private HttpResponse<String> getJson(String url, String accessToken) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+                .header("Accept", "application/json")
+                .header("Authorization", "Bearer " + accessToken)
+                .GET()
+                .build();
+        return this.browser.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
     private HttpResponse<String> get(String url) throws IOException, InterruptedException {

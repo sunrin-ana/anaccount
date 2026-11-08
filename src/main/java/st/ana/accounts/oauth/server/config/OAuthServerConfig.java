@@ -116,8 +116,12 @@ public class OAuthServerConfig {
         if (user != null) {
             claims.put("type", user.getGeneration()==-1?"user":"member");
             claims.put(StandardClaimNames.SUB, id);
-            if (scopes.contains("email")) {
+            if (scopes.contains("email") && user.getEmail() != null) {
                 claims.put(StandardClaimNames.EMAIL, user.getEmail());
+                // 클라이언트는 email_verified가 true일 때만 email을 신뢰한다
+                // (OIDC Core 1.0 §5.3). 이 계정의 email은 Google 로그인으로
+                // 확인된 값이므로 검증됨으로 표시한다.
+                claims.put(StandardClaimNames.EMAIL_VERIFIED, true);
             }
             if (scopes.contains("profile") && user.getName() != null) {
                 claims.put(StandardClaimNames.NAME, user.getName());
